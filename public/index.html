@@ -1,1 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capacitor App Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title span {
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="url"],
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .checkbox-item:hover {
+            background: #e9ecef;
+        }
+
+        .checkbox-item input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .toggle-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .toggle-header h3 {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #4facfe;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .toggle-content {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .toggle-content.active {
+            display: block;
+        }
+
+        .color-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .color-input-wrapper input[type="color"] {
+            width: 50px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .color-input-wrapper input[type="text"] {
+            flex: 1;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-loading .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-error {
+            background: #fee;
+            color: #c00;
+            border: 1px solid #fcc;
+        }
+
+        .alert-success {
+            background: #efe;
+            color: #060;
+            border: 1px solid #cfc;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #888;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 Capacitor App Builder</h1>
+            <p>Convert your website into a native Android & iOS app</p>
+        </div>
+
+        <div class="form-container">
+            <div id="alert" class="alert"></div>
+
+            <form id="buildForm">
+                <!-- Basic Info Section -->
+                <div class="section">
+                    <h2 class="section-title"><span>📋</span> Basic Information</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="appName">App Name *</label>
+                            <input type="text" id="appName" name="appName" placeholder="My Awesome App" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="packageName">Package Name *</label>
+                            <input type="text" id="packageName" name="packageName" placeholder="com.company.myapp" required>
+                            <p class="help-text">Format: com.yourcompany.appname</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appUrl">Website URL *</label>
+                        <input type="url" id="appUrl" name="appUrl" placeholder="https://yourwebsite.com" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="version">Version</label>
+                            <input type="text" id="version" name="version" placeholder="1.0.0" value="1.0.0">
+                        </div>
+                        <div class="form-group">
+                            <label for="author">Author</label>
+                            <input type="text" id="author" name="author" placeholder="Your Name">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <input type="text" id="description" name="description" placeholder="A short description of your app">
+                    </div>
+                </div>
+
+                <!-- Appearance Section -->
+                <div class="section">
+                    <h2 class="section-title"><span>🎨</span> Appearance</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Theme Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="themeColorPicker" value="#3880ff">
+                                <input type="text" id="themeColor" name="themeColor" value="#3880ff">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Background Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="bgColorPicker" value="#ffffff">
+                                <input type="text" id="backgroundColor" name="backgroundColor" value="#ffffff">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="orientation">Screen Orientation</label>
+                        <select id="orientation" name="orientation">
+                            <option value="portrait">Portrait</option>
+                            <option value="landscape">Landscape</option>
+                            <option value="any">Any</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Plugins Section -->
+                <div class="section">
+                    <h2 class="section-title"><span>🔌</span> Capacitor Plugins</h2>
+                    
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="plugin_browser" checked> Browser
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="plugin_camera"> Camera
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="plugin_geolocation"> Geolocation
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="plugin_share" checked> Share
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="plugin_statusBar" checked> Status Bar
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="plugin_splashScreen" checked> Splash Screen
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="plugin_keyboard" checked> Keyboard
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="plugin_network" checked> Network
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="plugin_storage"> Storage
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="plugin_pushNotifications"> Push Notifications
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="plugin_haptics"> Haptics
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="plugin_device" checked> Device
+                        </label>
+                    </div>
+                </div>
+
+                <!-- AdMob Section -->
+                <div class="section">
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection('admob')">
+                            <h3>💰 AdMob Integration</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="admobEnabled" name="admobEnabled">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-content" id="admobContent">
+                            <div class="form-group">
+                                <label class="checkbox-item" style="width: fit-content;">
+                                    <input type="checkbox" name="admobTestMode" checked> Enable Test Mode
+                                </label>
+                            </div>
+
+                            <h4 style="margin: 20px 0 15px; color: #333;">Android Ad Units</h4>
+                            <div class="form-group">
+                                <label>App ID</label>
+                                <input type="text" name="admobAndroidAppId" placeholder="ca-app-pub-xxxxxxxxxxxxxxxx~xxxxxxxxxx">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Banner ID</label>
+                                    <input type="text" name="admobAndroidBannerId" placeholder="ca-app
