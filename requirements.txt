@@ -1,1 +1,1 @@
-Pillow==10.1.0
+# No external dependencies needed - using standard library only
