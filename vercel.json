@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/*.py",
+      "src": "api/build.py",
       "use": "@vercel/python"
     },
     {
@@ -12,16 +12,12 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1.py"
-    },
-    {
-      "src": "/(.*\\.(css|js|png|jpg|ico|svg))",
-      "dest": "/public/$1"
+      "src": "/api/build",
+      "dest": "/api/build.py"
     },
     {
       "src": "/(.*)",
-      "dest": "/public/index.html"
+      "dest": "/public/$1"
     }
   ]
 }
