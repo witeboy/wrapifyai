@@ -310,6 +310,283 @@ window.retryConnection = retryConnection;
 '''
         self.files['www/js/app.js'] = app_js
 
+ def _generate_ios_files(self):
+        """Generate iOS-specific files"""
+        config = self.config
+        admob = config.get('admob', {})
+        firebase = config.get('firebase', {})
+        google_auth = config.get('googleAuth', {})
+
+        # Info.plist
+        admob_plist = ''
+        if admob.get('enabled') and admob.get('ios', {}).get('appId'):
+            admob_plist = f'''
+    <key>GADApplicationIdentifier</key>
+    <string>{admob['ios']['appId']}</string>
+    <key>GADIsAdManagerApp</key>
+    <true/>
+    <key>SKAdNetworkItems</key>
+    <array>
+        <dict>
+            <key>SKAdNetworkIdentifier</key>
+            <string>cstr6suwn9.skadnetwork</string>
+        </dict>
+    </array>'''
+
+        google_auth_plist = ''
+        if google_auth.get('enabled') and google_auth.get('iosUrlScheme'):
+            google_auth_plist = f'''
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>google</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>{google_auth['iosUrlScheme']}</string>
+            </array>
+        </dict>
+    </array>'''
+
+        camera_plist = ''
+        if config.get('plugins', {}).get('camera'):
+            camera_plist = '''
+    <key>NSCameraUsageDescription</key>
+    <string>This app needs camera access to take photos.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>This app needs photo library access.</string>'''
+
+        location_plist = ''
+        if config.get('plugins', {}).get('geolocation'):
+            location_plist = '''
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>This app needs location access.</string>'''
+
+        info_plist = f'''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>{config['appName']}</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>{config['appName']}</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>{config.get('version', '1.0.0')}</string>
+    <key>CFBundleVersion</key>
+    <string>{config.get('versionCode', 1)}</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+    <key>UIMainStoryboardFile</key>
+    <string>Main</string>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>armv7</string>
+    </array>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <true/>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>{admob_plist}{google_auth_plist}{camera_plist}{location_plist}
+</dict>
+</plist>
+'''
+        self.files['ios/App/App/Info.plist'] = info_plist
+
+        # AppDelegate.swift
+        firebase_import = 'import FirebaseCore\n' if firebase.get('enabled') else ''
+        firebase_config = '        FirebaseApp.configure()\n' if firebase.get('enabled') else ''
+
+        app_delegate = f'''import UIKit
+import Capacitor
+{firebase_import}
+@UIApplicationMain
+class AppDelegate: UIResponder, UIApplicationDelegate {{
+
+    var window: UIWindow?
+
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {{
+{firebase_config}        return true
+    }}
+
+    func applicationWillResignActive(_ application: UIApplication) {{
+    }}
+
+    func applicationDidEnterBackground(_ application: UIApplication) {{
+    }}
+
+    func applicationWillEnterForeground(_ application: UIApplication) {{
+    }}
+
+    func applicationDidBecomeActive(_ application: UIApplication) {{
+    }}
+
+    func applicationWillTerminate(_ application: UIApplication) {{
+    }}
+
+    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {{
+        return ApplicationDelegateProxy.shared.application(app, open: url, options: options)
+    }}
+
+    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {{
+        return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
+    }}
+}}
+'''
+        self.files['ios/App/App/AppDelegate.swift'] = app_delegate
+
+        # Podfile
+        firebase_pods = ''
+        if firebase.get('enabled'):
+            firebase_pods = '''
+  pod 'FirebaseCore'
+  pod 'FirebaseMessaging'
+  pod 'FirebaseAnalytics'
+'''
+
+        admob_pods = ''
+        if admob.get('enabled'):
+            admob_pods = "\n  pod 'Google-Mobile-Ads-SDK'"
+
+        google_auth_pods = ''
+        if google_auth.get('enabled'):
+            google_auth_pods = "\n  pod 'GoogleSignIn'"
+
+        podfile = f'''require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
+
+platform :ios, '13.0'
+use_frameworks!
+
+install! 'cocoapods', :disable_input_output_paths => true
+
+def capacitor_pods
+  pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
+  pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
+end
+
+target 'App' do
+  capacitor_pods{firebase_pods}{admob_pods}{google_auth_pods}
+end
+
+post_install do |installer|
+  assertDeploymentTarget(installer)
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+    end
+  end
+end
+'''
+        self.files['ios/App/Podfile'] = podfile
+
+        # ViewController.swift
+        view_controller = '''import UIKit
+import Capacitor
+
+class ViewController: CAPBridgeViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+    }
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
+}
+'''
+        self.files['ios/App/App/ViewController.swift'] = view_controller
+
+        # capacitor.config.json for iOS
+        cap_config_ios = f'''{{
+  "appId": "{config['packageName']}",
+  "appName": "{config['appName']}",
+  "webDir": "www"
+}}
+'''
+        self.files['ios/App/App/capacitor.config.json'] = cap_config_ios
+
+    def _generate_readme(self):
+        """Generate README.md"""
+        config = self.config
+        admob = config.get('admob', {})
+        firebase = config.get('firebase', {})
+        plugins = config.get('plugins', {})
+
+        # Build enabled plugins list
+        enabled_plugins = []
+        plugin_names = {
+            'browser': 'Browser',
+            'camera': 'Camera',
+            'geolocation': 'Geolocation',
+            'share': 'Share',
+            'statusBar': 'Status Bar',
+            'splashScreen': 'Splash Screen',
+            'keyboard': 'Keyboard',
+            'network': 'Network',
+            'storage': 'Storage/Preferences',
+            'pushNotifications': 'Push Notifications',
+            'haptics': 'Haptics',
+            'device': 'Device',
+        }
+        for key, name in plugin_names.items():
+            if plugins.get(key):
+                enabled_plugins.append(f"- {name}")
+        
+        plugins_list = '\n'.join(enabled_plugins) if enabled_plugins else '- None selected'
+
+        # AdMob section
+        admob_section = ''
+        if admob.get('enabled'):
+            admob_android = admob.get('android', {})
+            admob_ios = admob.get('ios', {})
+            admob_section = f'''
+## AdMob Configuration
+
+AdMob is **enabled** for this project.
+
+### Android
+- App ID: `{admob_android.get('appId', 'Not set')}`
+- Banner ID: `{admob_android.get('bannerId', 'Not set')}`
+- Interstitial ID: `{admob_android.get('interstitialId', 'Not set')}`
+- Rewarded ID: `{admob_android.get('rewardedId', 'Not set')}`
+
+### iOS
+- App ID: `{admob_ios.get('appId', 'Not set')}`
+- Banner ID: `{admob_ios.get('bannerId', 'Not set')}`
+- Interstitial ID: `{admob_ios.get('interstitialId', 'Not set')}`
+- Rewarded ID: `{admob_ios.get('rewardedId', 'Not set')}`
+
+### Show Ads from Your Website
+
+```javascript
+// Show interstitial ad
+window.parent.postMessage({{ type: 'SHOW_INTERSTITIAL' }}, '*');
+
+// Show rewarded ad
+window.parent.postMessage({{ type: 'SHOW_REWARDED' }}, '*');
+
+// Hide banner
+window.parent.postMessage({{ type: 'HIDE_BANNER' }}, '*');
+
+// Show banner
+window.parent.postMessage({{ type: 'SHOW_BANNER' }}, '*');
+
     def _generate_admob_service(self):
         """Generate AdMob config file"""
         config = self.config
